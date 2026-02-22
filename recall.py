@@ -69,3 +69,4 @@ def evaluate_recall_at_k(results, correct_chunk_index, k):
 
 print("Recall@1:", evaluate_recall_at_k(results, correct_chunk_index, 1))
 print("Recall@3:", evaluate_recall_at_k(results, correct_chunk_index, 3))
+pprint(sentences[4])

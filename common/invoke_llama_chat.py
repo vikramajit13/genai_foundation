@@ -1,9 +1,23 @@
-from typing import List
+from typing import List, Dict, Any
 import ollama
 
-def query_with_context(user_query: str, chunks: List[str], selected_indices: List[int], trace: bool = True) -> str:
+
+
+
+def query_with_context(
+    user_query: str ,
+    chunks: List[str],
+    selected_indices: List[int],
+    trace: bool = True,
+) -> str:
     # 1) Context formatting: add chunk ids + clear separators (better than <...>)
-    context_text = "\n\n---\n\n".join([f"[CHUNK {i}]\n{chunks[i].strip()}" for i in selected_indices])
+    context_text = "\n\n---\n\n".join(
+        [f"[CHUNK {i}]\n{chunks[i].strip()}" for i in selected_indices]
+    )
+
+    # if required items is there
+    # check for items
+
 
     if trace:
         print("\n=== RAG TRACE ===")
@@ -19,7 +33,7 @@ def query_with_context(user_query: str, chunks: List[str], selected_indices: Lis
         "Rules:\n"
         "- Use ONLY the provided context.\n"
         "- If the answer is not explicitly in the context, say exactly: "
-        "\"I don't know based on the provided context.\"\n"
+        '"I don\'t know based on the provided context."\n'
         "- For each bullet, include a short supporting quote from the context.\n"
         "- Keep the answer concise.\n"
     )

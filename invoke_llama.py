@@ -1,9 +1,10 @@
 
 from common.embedings import return_embeddings
 from common.invoke_llama_chat import query_with_context
-from utils import cosine_similarity, chunk_text
+from utils import cosine_similarity, chunk_text, chunk_by_sections
 import numpy as np
 from pprint import pprint
+from retrievalidf.tfidf import build_idf, keyword_score_idf
 
 
 str = """
@@ -32,11 +33,17 @@ query = (
 )
 
 
+
 sentences = chunk_text(str)
 pprint(sentences)
 
+idf = build_idf(sentences)
+# keyword_score = keyword_score_idf(query,sentences[0], idf)
+# print("keyword_score")
+# print(keyword_score)
+
 embeddings_document = return_embeddings(sentences)
-embeddings_query = return_embeddings([query])
+embeddings_query = return_embeddings([query])[0]
 
 keyword_boosts = [1.0 if "tax" in c.lower() else 0.0 for c in sentences]
 
@@ -47,13 +54,14 @@ n = len(sentences)
 print("total_Embeddings::", n)
 scores = []
 for idx, chunk_emb in enumerate(embeddings_document):
-    sim = cosine_similarity(embeddings_query, chunk_emb)
+    sim = float(cosine_similarity(embeddings_query, chunk_emb))
     scores.append((idx, sim))
 
 final_rankings = []
 for i in range(n):
     penalty = np.log10(lengths_list[i] + 1) / np.log10(np.max(lengths_list) + 1)
-    final_scores = 0.6 * scores[i][1] + 0.2 * keyword_boosts[i] + 0.2 * penalty
+    final_scores = 0.75 * scores[i][1] + 0.2 * keyword_score_idf(query,sentences[i], idf) + 0.05*penalty
+    #final_scores = scores[i][1] 
     final_rankings.append((scores[i][0], final_scores))
 
 
@@ -65,13 +73,13 @@ print("invoking llama with below top hcunk")
 print(topk_syn_final[0])
 
 print("\n=== RETRIEVAL TRACE ===")
-for rank, (idx, score) in enumerate(final_rankings, start=1):
+for rank, (idx, score) in enumerate(final_rankings, start=0):
     print("score:::")
     print(score)
  
     preview = sentences[idx].replace("\n", " ")[:120]
    
-    print(f"Rank {rank} | idx={idx} | score={score[0]:.3f} | {preview}...")
+    print(f"Rank {rank} | idx={idx} | score={score:.3f} | {preview}...")
 
 # print("\n=== CONTEXT SENT TO LLM (first 800 chars) ===")
 # print(context[:800])
